@@ -20,7 +20,7 @@ function Chat() {
 
         const fetchData = async () => {
             try {
-                const response = await fetch('http://localhost:4000/fetch_user', {
+                const response = await fetch(`${process.env.base_url}/fetch_user`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ function Chat() {
     const selectUser = async (user) => {
         setCurrentChat(user);
         try {
-            const response = await fetch(`http://localhost:4000/api/messages/${user._id}`, {
+            const response = await fetch(`${process.env.base_url}/api/messages/${user._id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

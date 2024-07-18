@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './signup-login.css';
 import Swal from 'sweetalert2';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -11,7 +12,7 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${process.env.base_url}/login`, {
+            const response = await fetch(`${process.env.REACT_APP_BASE_URL}/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,6 +81,7 @@ function Login() {
                                     />
                                     <button type='submit' className='btn btn-primary mt-2'>Login</button>
                                 </form>
+                                <Link to="/signup">If Have not Account</Link>
                             </div>
                         </div>
                     </div>

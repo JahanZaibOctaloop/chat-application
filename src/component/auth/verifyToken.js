@@ -1,12 +1,28 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import {jwtDecode} from 'jwt-decode';
 
-const VerifyToken = ({ children }) => {
+const verifyToken = () => {
     const token = localStorage.getItem('token');
+    console.log(token);
     if (!token) {
-        return <Navigate to="/" replace />;
+        return false;
     }
-    return children;
+    try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp < currentTime) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userName');
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Token verification error:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+        return false;
+    }
 };
 
-export default VerifyToken;
+export default verifyToken;

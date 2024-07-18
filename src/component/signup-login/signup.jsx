@@ -11,7 +11,7 @@ function Signup() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${process.env.base_url}/signup`, {
+            const response = await fetch(`${process.env.REACT_APP_BASE_URL}/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ function Signup() {
                                 <button type='submit' className='btn btn-primary mt-2'>SignUp</button>
                                 
                             </form>
-                            <Link className='mr-4' to="/login">If Have Already account </Link>
+                            <Link className='mr-4' to="/">If Have Already account </Link>
                         </div>
                     </div>
                 </div>

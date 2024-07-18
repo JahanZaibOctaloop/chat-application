@@ -4,9 +4,8 @@ import io from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import verifyToken from '../auth/verifyToken';
 
-const socket = io(process.env.REACT_APP_BASE_URL, {
-    transports: ['websocket', 'polling'], // Use both transports to ensure compatibility
-});
+const socket = io(process.env.REACT_APP_BASE_URL)
+
 
 function Chat() {
     const [currentChat, setCurrentChat] = useState(null);

@@ -62,6 +62,14 @@ function Chat() {
 
         fetchData();
 
+        socket.on('connect_error', (err) => {
+            console.error('Socket connect_error: ', err);
+        });
+        socket.on('connect_failed', (err) => {
+            console.error('Socket connect_failed: ', err);
+        });
+        
+
         socket.on('msg-receive', (msg) => {
             setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: msg }]);
         });

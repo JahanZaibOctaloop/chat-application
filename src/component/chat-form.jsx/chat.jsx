@@ -4,8 +4,12 @@ import io from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import verifyToken from '../auth/verifyToken';
 
-const socket = io(process.env.REACT_APP_BASE_URL)
-
+const socket = io(process.env.REACT_APP_BASE_URL, {
+    withCredentials: true,
+    extraHeaders: {
+        'Content-Type': 'application/json',
+    },
+});
 
 function Chat() {
     const [currentChat, setCurrentChat] = useState(null);
@@ -37,7 +41,7 @@ function Chat() {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     },
                 });
 
@@ -46,12 +50,11 @@ function Chat() {
                 }
 
                 const data = await response.json();
-                // Debug: Check if the data is an array
                 if (Array.isArray(data.data)) {
                     setUsers(data.data);
                 } else {
                     console.error('API response is not an array:', data);
-                    setUsers([]); // Set to an empty array if the response is not an array
+                    setUsers([]);
                 }
             } catch (error) {
                 setError(error.message);
@@ -67,14 +70,19 @@ function Chat() {
         socket.on('connect_failed', (err) => {
             console.error('Socket connect_failed: ', err);
         });
-        
 
         socket.on('msg-receive', (msg) => {
-            setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: msg }]);
+            setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: msg, type: 'text' }]);
+        });
+
+        socket.on('receive-media', (data) => {
+            const { fileBuffer, type } = data;
+            setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: fileBuffer, type }]);
         });
 
         return () => {
             socket.off('msg-receive');
+            socket.off('receive-media');
         };
     }, [navigate]);
 
@@ -85,7 +93,7 @@ function Chat() {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 
@@ -94,7 +102,13 @@ function Chat() {
             }
 
             const data = await response.json();
-            setMessages(data.messages);
+            const updatedMessages = data.messages.map(msg => {
+                if (msg.type === 'image' || msg.type === 'video') {
+                    return { ...msg, base64String: msg.content };
+                }
+                return msg;
+            });
+            setMessages(updatedMessages);
         } catch (error) {
             setError(error.message);
         }
@@ -108,14 +122,31 @@ function Chat() {
                 content: message,
                 type: 'text',
             };
-            setMessages((prevMessages) => [...prevMessages, { from: 'You', content: message }]);
+            setMessages((prevMessages) => [...prevMessages, { from: 'You', content: message, type: 'text' }]);
             socket.emit('send-msg', { msg: message, to: currentChat._id, from: userId });
             setMessage('');
         }
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && currentChat) {
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = () => {
+                const fileBuffer = reader.result;
+                const fileType = file.type.startsWith('image') ? 'image' : 'video';
+                const base64String = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+                const userId = localStorage.getItem('userId');
+                socket.emit('send-media', { recipientId: currentChat._id, fileBuffer, from: userId, type: fileType });
+                setMessages((prevMessages) => [...prevMessages, { from: 'You', content: base64String, type: fileType }]);
+            };
+            // Clear the file input
+            e.target.value = null;
+        }
+    };
+
     if (isAuthenticated === null) {
-        // Return null or a loading spinner while authentication status is being determined
         return null;
     }
 
@@ -139,7 +170,16 @@ function Chat() {
                             <div className="messages">
                                 {messages.map((msg, index) => (
                                     <div key={index} className={`message ${msg.from === 'You' ? 'sent' : 'received'}`}>
-                                        {msg.content}
+                                        {msg.type === 'image' ? (
+                                            <img src={`data:image/jpeg;base64,${msg.content}`} alt="sent image" />
+                                        ) : msg.type === 'video' ? (
+                                            <video controls>
+                                                <source src={`data:video/mp4;base64,${msg.content}`} type="video/mp4" />
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        ) : (
+                                            msg.content
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -151,6 +191,7 @@ function Chat() {
                                     className="form-control"
                                     placeholder="Type a message"
                                 />
+                                <input type="file" onChange={handleFileChange} className="form-control" />
                                 <button onClick={sendMessage} className="btn btn-primary">Send</button>
                             </div>
                         </>

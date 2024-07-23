@@ -3,6 +3,7 @@ import './chat.css';
 import io from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import verifyToken from '../auth/verifyToken';
+import Header from '../header';
 
 const socket = io(process.env.REACT_APP_BASE_URL, {
     withCredentials: true,
@@ -37,21 +38,20 @@ function Chat() {
 
         const fetchData = async () => {
             try {
-                const response = await fetch(`${process.env.REACT_APP_BASE_URL}/fetch_user`, {
+                const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/friend-requests/friends`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     },
                 });
-
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-                if (Array.isArray(data.data)) {
-                    setUsers(data.data);
+                if (Array.isArray(data.friends)) {
+                    setUsers(data.friends);
                 } else {
                     console.error('API response is not an array:', data);
                     setUsers([]);
@@ -64,32 +64,33 @@ function Chat() {
 
         fetchData();
 
-        socket.on('connect_error', (err) => {
-            console.error('Socket connect_error: ', err);
-        });
-        socket.on('connect_failed', (err) => {
-            console.error('Socket connect_failed: ', err);
-        });
+        const handleMsgReceive = (msg) => {
+            if (currentChat && msg.from === currentChat._id) {
+                setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: msg.content, type: 'text' }]);
+            }
+        };
 
-        socket.on('msg-receive', (msg) => {
-            setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: msg, type: 'text' }]);
-        });
+        const handleReceiveMedia = (data) => {
+            if (currentChat && data.from === currentChat._id) {
+                const { fileBuffer, type } = data;
+                setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: fileBuffer, type }]);
+            }
+        };
 
-        socket.on('receive-media', (data) => {
-            const { fileBuffer, type } = data;
-            setMessages((prevMessages) => [...prevMessages, { from: 'Other', content: fileBuffer, type }]);
-        });
+        socket.on('msg-receive', handleMsgReceive);
+        socket.on('receive-media', handleReceiveMedia);
 
         return () => {
-            socket.off('msg-receive');
-            socket.off('receive-media');
+            socket.off('msg-receive', handleMsgReceive);
+            socket.off('receive-media', handleReceiveMedia);
         };
-    }, [navigate]);
+    }, [navigate, currentChat]);
 
     const selectUser = async (user) => {
         setCurrentChat(user);
+        const userId = localStorage.getItem('userId');
         try {
-            const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/messages/${user._id}`, {
+            const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/messages/${userId}/${user._id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -141,8 +142,7 @@ function Chat() {
                 socket.emit('send-media', { recipientId: currentChat._id, fileBuffer, from: userId, type: fileType });
                 setMessages((prevMessages) => [...prevMessages, { from: 'You', content: base64String, type: fileType }]);
             };
-            // Clear the file input
-            e.target.value = null;
+            e.target.value = null; // Clear the file input
         }
     };
 
@@ -151,58 +151,62 @@ function Chat() {
     }
 
     return (
-        <div className="container chat-container border">
-            <div className="row">
-                <div className="col-md-4 users-list">
-                    <h4>Current Users: {localStorage.getItem('userName')}</h4>
-                    <ul className="list-group">
-                        {Array.isArray(users) && users.map(user => (
-                            <li key={user._id} className="list-group-item" onClick={() => selectUser(user)}>
-                                {user.name}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <div className="col-md-8 chat-screen">
-                    {currentChat ? (
-                        <>
-                            <h4>Chat with {currentChat.name}</h4>
-                            <div className="messages">
-                                {messages.map((msg, index) => (
-                                    <div key={index} className={`message ${msg.from === 'You' ? 'sent' : 'received'}`}>
-                                        {msg.type === 'image' ? (
-                                            <img src={`data:image/jpeg;base64,${msg.content}`} alt="sent image" />
-                                        ) : msg.type === 'video' ? (
-                                            <video controls>
-                                                <source src={`data:video/mp4;base64,${msg.content}`} type="video/mp4" />
-                                                Your browser does not support the video tag.
-                                            </video>
-                                        ) : (
-                                            msg.content
-                                        )}
-                                    </div>
-                                ))}
+        <>
+            <Header/>
+           
+            <div className="container chat-container border">
+                <div className="row">
+                    <div className="col-md-4 users-list">
+                        <h4>Current Users: {localStorage.getItem('userName')}</h4>
+                        <ul className="list-group">
+                            {Array.isArray(users) && users.map(user => (
+                                <li key={user._id} className="list-group-item" onClick={() => selectUser(user)}>
+                                    {user.name}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="col-md-8 chat-screen">
+                        {currentChat ? (
+                            <>
+                                <h4>Chat with {currentChat.name}</h4>
+                                <div className="messages">
+                                    {messages.map((msg, index) => (
+                                        <div key={index} className={`message ${msg.from === 'You' ? 'sent' : 'received'}`}>
+                                            {msg.type === 'image' ? (
+                                                <img src={`data:image/jpeg;base64,${msg.content}`} alt="sent image" />
+                                            ) : msg.type === 'video' ? (
+                                                <video controls>
+                                                    <source src={`data:video/mp4;base64,${msg.content}`} type="video/mp4" />
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            ) : (
+                                                msg.content
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="message-input">
+                                    <input
+                                        type="text"
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        className="form-control"
+                                        placeholder="Type a message"
+                                    />
+                                    <input type="file" onChange={handleFileChange} className="form-control" />
+                                    <button onClick={sendMessage} className="btn btn-primary">Send</button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="no-chat-selected">
+                                <h4>Select a user to start chatting</h4>
                             </div>
-                            <div className="message-input">
-                                <input
-                                    type="text"
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    className="form-control"
-                                    placeholder="Type a message"
-                                />
-                                <input type="file" onChange={handleFileChange} className="form-control" />
-                                <button onClick={sendMessage} className="btn btn-primary">Send</button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="no-chat-selected">
-                            <h4>Select a user to start chatting</h4>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
 

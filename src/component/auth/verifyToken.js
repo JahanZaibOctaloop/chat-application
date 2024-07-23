@@ -7,6 +7,7 @@ const verifyToken = () => {
         return false;
     }
     try {
+        
         const decoded = jwtDecode(token);
         const currentTime = Date.now() / 1000;
         if (decoded.exp < currentTime) {

@@ -4,8 +4,8 @@ import 'bootstrap/dist/js/bootstrap.js';
 import Signup from './component/signup-login/signup';
 import Login from './component/signup-login/login';
 import Chat from './component/chat-form.jsx/chat';
-import VerifyToken from './component/auth/verifyToken';
-import Chatt from './component/chat-form.jsx/chatt';
+import FriendRequest from './component/friendRequest/friendRequest';
+import UserList from './component/friendRequest/UserList';
 
 function App() {
   console.log('Base URL:', process.env.REACT_APP_BASE_URL);
@@ -16,8 +16,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/" element={<Login />} />
         <Route path="/chat" element={<Chat/>} />
+        <Route path="/friend_request" element={<FriendRequest/>} />
+        <Route path="/user_list" element={<UserList/>} />
 
-        <Route path="/chatt" element={<VerifyToken><Chatt/></VerifyToken>} />
 
       </Routes>
     </>

@@ -1,0 +1,81 @@
+/* Container for the friend requests page */
+.friend-request-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading styles */
+.friend-request-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Error message styling */
+.error {
+    color: #d9534f;
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* No friend requests message */
+.friend-request-container p {
+    text-align: center;
+    color: #555;
+    font-size: 1.2em;
+}
+
+/* List of friend requests */
+.friend-request-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.friend-request-container li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.friend-request-container li span {
+    font-size: 1.1em;
+    color: #333;
+}
+
+.friend-request-container button {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1em;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.friend-request-container button:hover {
+    background-color: #0056b3;
+}
+
+.friend-request-container button.reject {
+    background-color: #dc3545;
+}
+
+.friend-request-container button.reject:hover {
+    background-color: #c82333;
+}

@@ -28,7 +28,6 @@ function Login() {
                 localStorage.setItem('userId', data.data._id);
                 localStorage.setItem('userName', data.data.name);
 
-
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',

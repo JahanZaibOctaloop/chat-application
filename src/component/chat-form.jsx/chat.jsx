@@ -7,9 +7,13 @@ import Header from '../header';
 
 const socket = io(process.env.REACT_APP_BASE_URL, {
     withCredentials: true,
-    extraHeaders: {
-        'Content-Type': 'application/json',
-    },
+   transportOptions:{
+    polling:{
+        extraHeaders: {
+            'Content-Type': 'application/json',
+        },
+    }
+   }
 });
 
 function Chat() {

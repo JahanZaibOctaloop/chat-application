@@ -7,6 +7,7 @@ import Header from '../header';
 
 const socket = io(process.env.REACT_APP_BASE_URL, {
     withCredentials: true,
+    transports: ['websocket', 'polling'], 
    transportOptions:{
     polling:{
         extraHeaders: {

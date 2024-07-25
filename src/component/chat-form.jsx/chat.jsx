@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import verifyToken from '../auth/verifyToken';
 import Header from '../header';
 
-const socket = io(process.env.REACT_APP_BASE_URL, {
+const socket = io('https://chat-application-backend-nu.vercel.app', {
     withCredentials: true,
     transports: ['websocket', 'polling'], 
    transportOptions:{
